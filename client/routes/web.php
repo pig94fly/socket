@@ -24,4 +24,5 @@ Route::post('login','AuthController@login');
 Route::group(['middleware'=>['auth']],function ($router){
     $router->get('logout','AuthController@logout');
     $router->get('home','HomeController@index');
+    $router->get('ws/token','WebSocketController@token');
 });

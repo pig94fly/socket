@@ -40,7 +40,7 @@ $app->singleton(
     Illuminate\Contracts\Debug\ExceptionHandler::class,
     App\Exceptions\Handler::class
 );
-
+require app_path('functions/function.php');
 /*
 |--------------------------------------------------------------------------
 | Return The Application
