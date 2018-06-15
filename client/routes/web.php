@@ -14,3 +14,14 @@
 Route::get('/', function () {
     return view('welcome');
 });
+Route::any('register','AuthController@register');
+Route::get('redis','RedisController@test');
+Route::get('login','AuthController@index')->name('login');
+Route::post('login','AuthController@login');
+//Auth::routes();
+
+//Route::get('/home', 'HomeController@index')->name('home');
+Route::group(['middleware'=>['auth']],function ($router){
+    $router->get('logout','AuthController@logout');
+    $router->get('home','HomeController@index');
+});
