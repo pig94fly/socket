@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateGoodsTable extends Migration
+class CreateChatRecordTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,14 @@ class CreateGoodsTable extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('chat_records', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('username',55);
-            $table->string('nickname',55);
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->integer('from_id');
+            $table->integer('to_id');
+            $table->text('record');
+            $table->integer('created_time');
         });
     }
-
     /**
      * Reverse the migrations.
      *
@@ -30,6 +28,6 @@ class CreateGoodsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('chat_records');
     }
 }
