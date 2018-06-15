@@ -98,10 +98,3 @@
     });
 
     $server->start();
-
-//    $server = new swoole_http_server('127.0.0.1',9520);
-////    $server->set();
-//
-//    $server->on('request',function ($request,$response){
-//        $response->end(print_r($request));
-//    });

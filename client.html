@@ -27,6 +27,7 @@
         crossorigin="anonymous"></script>
 <script>
     var ws;
+    var wsPing;
     function wsConnect() {
         var host = $('#host').val();
         var port = $('#port').val();
@@ -34,6 +35,7 @@
 
         ws.onopen = function (event) {
             console.log('Socket Connect');
+            wsPing = setInterval('pingWs()',3000);
         }
         ws.onmessage = function (evt) {
             if(typeof(evt.data)=="string"){
@@ -53,9 +55,11 @@
             }
         }
         ws.onclose = function (p1) {
+            clearInterval(wsPing);
             console.log("Connection closed!");
         }
         ws.onerror = function (event) {
+            clearInterval(wsPing);
             console.log("Connect error!");
         }
     }
@@ -65,16 +69,10 @@
     }
     function sendImg() {
         var file = document.querySelector("input[type='file']").files[0];
-//        alert(file);
         UpladFile(file);
-//        file = window.bl;
-
-//        alert(file);
-//        return;
-//        ws.send(file);
-//        alert(compress(file));return;
-//        console.log(file);return;
-//        ws.send(compress(file));
+    }
+    function pingWs() {
+        ws.send("ping");
     }
 </script>
 
