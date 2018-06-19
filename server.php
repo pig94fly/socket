@@ -1,60 +1,9 @@
 <?php
 /**
- * ***************************************
- *            单进程保护                 *
- * ***************************************
+ * 引入socket配置文件
  */
-$phpSelf            = realpath($_SERVER['PHP_SELF']);
-$lockFile           = $phpSelf.'.lock';
-$lockFileHandle     = fopen($lockFile, "w");
-if ($lockFileHandle == false) {
-    exit("Can not create lock file $lockFile\n");
-}
-if (!flock($lockFileHandle, LOCK_EX + LOCK_NB)) {
-    exit(date("Y-m-d H:i:s")."Process already exist.\n");
-}
-define("PROCESS_NAME","SOCKET");
-$redisConf = [
-  'host' => '127.0.0.1',
-  'port' => 6379,
-];
-
-/**
- * ***************************************
- *     进入程序，定义相关配置            *
- * ***************************************
- */
-//set_time_limit(0);
-//socket会话的超时时间,根据业务场景设置，这里设置为永不超时
-//如果设置了时间，则从socket建立=>传输=>关闭整个过程必须在定义的时间内完成，否则自动close该socket并抛出warning
-//ini_set('default_socket_timeout', -1);
-$conf = array(
-    'listen'  => array('host' => '0.0.0.0','port' => 9420),
-    'setting' => array(
-        //程序允许的最大连接数，用以设置server最大允许维持多少个TCP连接，超过该数量后，新连接将被拒绝，默认为ulimit -n的值，如果设置大于ulimit -n则强制重置为ulimit- n，如果确实需要设置超过ulimit -n的值，请修改系统值 vim /etc/security/limits.conf 修改nofile的值
-        "max_conn"          => 1024,
-        //启用CPU亲和设置(在全异步非阻塞是可启用),在多核的服务器中，启用此特性会将swoole的reactor线程/worker进程绑定到固定的一个核上。可以避免进程/线程的运行时在多个核之间互相切换，提高CPU Cache的命中率,如何确定绑定在了哪个核上，请参考文档, 查看命令: taskset -p 进程id
-        'open_cpu_affinity' => 0,
-        //配置task进程数量,配置此参数后将会启用task功能。所以Server务必要注册onTask、onFinish2个事件回调函数。如果没有注册，服务器程序将无法启动.Task进程是同步阻塞的，配置方式与Worker同步模式一致。
-        'task_worker_num'   => 20,
-        //设置task进程的最大任务数。一个task进程在处理完超过此数值的任务后将自动退出。这个参数是为了防止PHP进程内存溢出。如果不希望进程自动退出可以设置为0, 默认是0
-        'task_max_request'  => 1024,
-        //设置task的数据临时目录，在swoole_server中，如果投递的数据超过8192字节，将启用临时文件来保存数据。这里的task_tmpdir就是用来设置临时文件保存的位置。
-        'task_tmpdir'       => '/tmp/',
-        //worker进程数量，根据业务代码的模式作调整，全异步非阻塞可设置为CPU核数的1-4倍;同步阻塞，请参考文档调整
-        'worker_num'        => 8,
-        //指定swoole错误日志文件
-        'log_file'          => '/tmp/log/log.txt',
-        //心跳包
-        'heartbeat_idle_time' => 10,
-        'heartbeat_check_interval' => 3,
-        //SSL公钥和私钥的位置，启用wss必须在编译swoole时加入--enable-openssl选项
-        'ssl_cert_file'     => '/usr/local/nginx/conf/server.cer',
-        'ssl_key_file'      => '/usr/local/nginx/conf/server.key',
-    ),
-);
-
-
+require "socket_config.php";
+require "socket_functions.php";
 /**
  * ***************************************
  *           绑定回调事件                *
@@ -90,16 +39,13 @@ $ws->on('start', function ($ws) {
  * 6. 可以将公用的，不易变的php文件放置到onWorkerStart之前(例如上面的redis配置)。这样虽然不能重载入代码，但所有worker是共享的，不需要额外的内存来保存这些数据。
  * 7. onWorkerStart之后的代码每个worker都需要在内存中保存一份
  */
-$ws->on('workerstart', function ($ws, $wid)use ($redisConf) {
+$ws->on('workerstart', function ($ws, $wid)use ($redisConf,$mysqlConf) {
     //获取redis全局对象
     redisStart($redisConf);
     //保存server对象到全局中以待使用
     $GLOBALS['ws'] = $ws;
-    $GLOBALS['wid'] = $wid;
-
     $jobType = $ws->taskworker ? 'Tasker' : 'Worker';
     swoole_set_process_name(PROCESS_NAME.'_'.$jobType.'_'.$wid);
-//    $GLOBALS['wid'] = $wid;
     if ($jobType == 'Worker') { //在某个worker进程上绑定redis订阅进程
         echo "Worker {$wid} start!\n";
     }else{
@@ -112,7 +58,7 @@ $ws->on('workerstart', function ($ws, $wid)use ($redisConf) {
  * 注意manager进程中不能添加定时器
  * manager进程中可以调用sendMessage接口向其他工作进程发送消息
  */
-$ws->on('managerstart', function ($ws) {
+$ws->on('managerstart', function ($ws)use ($redisConf) {
     swoole_set_process_name(PROCESS_NAME.'_manage');
 });
 
@@ -128,11 +74,25 @@ $ws->on('managerstart', function ($ws) {
  * 注意点: 客户端发送的ping帧不会触发onMessage，底层会自动回复pong包
  */
 $ws->on('message', function ($ws, $frame) {
-//    echo "Server: Worker {$GLOBALS['wid']}: has receive message\n";
-//    print_r($frame);
     //接收到客户端请求，并建立连接之后，进行相应业务的处理
-    $GLOBALS['ws']->task($frame);
-//    handleClientData($ws, $frame);
+//    $GLOBALS['ws']->task($frame);
+    $msg = json_decode($frame->data,true);
+    if (!empty($msg['type'])){
+        switch ($msg['type']){
+            case 'ping':            //心跳包
+                $ws->push($frame->fd,json_encode(['type'=>'pong','msg'=>'pong',]));
+                break;
+            case 'c2c':             //个人信息
+            case 'group':
+                $ws->task($frame);
+                break;
+            case 'login':
+                userLogin($ws,$frame,$msg);
+                break;
+        }
+    }else{
+        $ws->close($frame->fd);
+    }
 });
 
 /**
@@ -144,24 +104,14 @@ $ws->on('message', function ($ws, $frame) {
  * @param: $data 需要执行的任务内容
  * 注意点: onTask函数执行时遇到致命错误退出，或者被外部进程强制kill，当前的任务会被丢弃，但不会影响其他正在排队的Task
  */
-$ws->on('task', function ($ws, $tid, $wid, $data) {
-    echo "Tasker {$GLOBALS['wid']} return msg:{$data->data}!\n";
-    switch ($data->opcode){
-        case 1:
-            $ws->push($data->fd,$data->data,1);
-            break;
-        case 2:
-            $ws->push($data->fd,$data->data,2);
+$ws->on('task', function ($ws, $tid, $wid, $frame) {
+    $msg = json_decode($frame->data,true);
+    switch ($msg['type']){
+        case 'c2c':             //个人信息
+            sendUserMsg($frame->fd,$msg,$frame->data);
             break;
     }
-    return $data;
-//    switch ($data['cmd']) {
-//        case 'pushToClient': $ret = pushToClientTask($ws, $data['key'], $data['val']); break;
-//    }
-//    //1.7.2以上的版本，在onTask函数中 return字符串，表示将此内容返回给worker进程。worker进程中会触发onFinish函数，表示投递的task已完成。return的变量可以是任意非null的PHP变量
-//    return $returnContent;
-//    //1.7.2以前的版本，需要调用swoole_server->finish()函数将结果返回给worker进程
-//    // $ws->finish($data);
+    return $frame;
 });
 
 /**
@@ -207,6 +157,11 @@ $ws->on('close', function ($ws, $fd) {
 //    }
 //    $redis->del(REDIS_FD_S.$fd);
 //    $redis->close();
+    $userId = $GLOBALS['redis']->hget('WsIdUser',$fd);
+    if ($userId){
+        $GLOBALS['redis']->hdel('WsIdUser',$fd);
+        $GLOBALS['redis']->hdel('UserWsId',$userId);
+    }
     echo "Client $fd has closed.\n";
 });
 
@@ -214,15 +169,3 @@ $ws->on('close', function ($ws, $fd) {
  * 开启swoole_websocket_server服务
  */
 $ws->start();
-/**
- *redis开启
- *以全局变量保存对象
- * @param:$redisConf redis配置信息
- * @param:$GLOBAL['redis'] redis全局对象
-*/
-function redisStart($redisConf){
-    $redis = new Redis();
-    $redis->connect($redisConf['host'],$redisConf['port']);
-    $redis->auth("");
-    $GLOBALS['redis'] = $redis;
-}

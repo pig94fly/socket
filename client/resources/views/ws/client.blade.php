@@ -16,7 +16,7 @@
 <form>
     <input type="file" onchange="javascript:sendImg()">
 </form>
-<div id="imgDiv">
+<div id="chatDiv">
 
 </div>
 
@@ -28,30 +28,30 @@
         integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
         crossorigin="anonymous"></script>
 <script>
-//    var url;
-//    var wsToken;
-//    var wsHost;
-//    var wsPort;
-//
-//    window.onload = function () {
-//        url = $('#hostUrl').val();
-//        console.log(url);
-//        $.get(url+"/ws/token",function (data) {
-//            wsToken = data.token;
-//            wsHost = data.host;
-//            wsPort = data.port;
-//            console.log(wsToken+wsHost+wsPort);
-//            wsConnect();
-//        },'json');
-//    }
+    var url;
+    var wsToken;
+    var wsHost;
+    var wsPort;
+
+    window.onload = function () {
+        url = $('#hostUrl').val();
+        console.log(url);
+        $.get(url+"/ws/token",function (data) {
+            wsToken = data.token;
+            wsHost = data.host;
+            wsPort = data.port;
+            console.log(wsToken+wsHost+wsPort);
+            wsConnect();
+        },'json');
+    }
 </script>
 <script>
     var ws;
     var wsPing;
     function wsConnect() {
-        var host = $('#host').val();
-        var port = $('#port').val();
-        ws = new WebSocket("ws://"+host+":"+port);
+//        var host = $('#host').val();
+//        var port = $('#port').val();
+        ws = new WebSocket("ws://"+wsHost+":"+wsPort);
 
         ws.onopen = function (event) {
             console.log('Socket Connect');
@@ -60,7 +60,12 @@
         }
         ws.onmessage = function (evt) {
             var msgJson = JSON.parse(evt.data);
-            console.log(msgJson.type+msgJson.msg);
+            switch (msgJson.type){
+                case 'pong':
+                    break;
+                case 'c2c':
+                    console.log('發送者ID：'+msgJson.frommsgJson.msg);
+            }
         }
         ws.onclose = function (p1) {
             clearInterval(wsPing);
@@ -84,9 +89,8 @@
         ws.send(JSON.stringify(msg));
     }
     function sendLogin() {
-        var msg = {'type':'login','msg':'','token':'wstoken'};
+        var msg = {'type':'login','msg':'','token':wsToken};
         ws.send(JSON.stringify(msg));
-        console.log('sended msg');
     }
 </script>
 <script>

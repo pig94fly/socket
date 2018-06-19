@@ -12,7 +12,7 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+//    return view('welcome');
 });
 Route::any('register','AuthController@register');
 Route::get('redis','RedisController@test');
@@ -25,4 +25,5 @@ Route::group(['middleware'=>['auth']],function ($router){
     $router->get('logout','AuthController@logout');
     $router->get('home','HomeController@index');
     $router->get('ws/token','WebSocketController@token');
+    $router->get('ws/client','WebSocketController@client');
 });
