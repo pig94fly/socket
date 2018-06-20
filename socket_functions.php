@@ -7,48 +7,21 @@
  */
 
 /**
- *redis开启
- *以全局变量保存对象
- * @param:$redisConf redis配置信息
- * @param:$GLOBAL['redis'] redis全局对象
+ * @param $frame
+ * @param $msg
  */
-function redisStart($redisConf){
-    $redis = new Redis();
-    $redis->connect($redisConf['host'],$redisConf['port']);
-    $redis->auth("");
-    $GLOBALS['redis'] = $redis;
-}
-function userLogin($ws,$frame,$msg)
+function userLogin($wsId,$token)
 {
-    $uid = $GLOBALS['redis']->get('WsToken-'.$msg['token']);
+    $uid = getUidByLoginToken($token);
     if ($uid){
-        $GLOBALS['redis']->hset('UserWsId',$uid,$frame->fd);
-        $GLOBALS['redis']->hset('WsIdUser',$frame->fd,$uid);
-        $ws->push($frame->fd,json_encode(['type'=>'login','msg'=>$uid.'-'.$frame->fd,'status'=>'success']));
+        storeWsMsg($wsId,$uid);
+        wsPush($wsId,resMsg('system','web socket connect successful!'));
     }else{
-        $ws->close($frame->fd);
+        wsPush($wsId,resMsg('system','invalid user or token!'));
+        wsPush($wsId);
     }
 }
-/**
- * @param $conf  mysql配置函数
- */
-function mysqlStart($conf){
-    $mysqli = mysqli_connect($conf['host'],$conf['username'],$conf['password'],$conf['database']);
-    $GLOBALS['mysqli'] = $mysqli;
-}
-/**
- * redis存储socket主进程id
- * @parameter：
- */
-function writeProcessPid($redisConf)
-{
-    $redis = new Redis();
-    $redis->connect($redisConf['host'],$redisConf['port']);
-    $redis->auth('');
-    $redis->del('SOCKET_PROCESS');
-    $redis->sAdd('SOCKET_PROCESS',getmypid());
-    $redis->close();
-}
+
 /**
  * 发送信息给用户
  * （1) redis获取发送放uid
@@ -56,23 +29,16 @@ function writeProcessPid($redisConf)
  * （3）接收方存在发送数据
  * （4）接收方不存在存储消息进入队列
  */
-function sendUserMsg($senderWsId,$msg,$jsMsg)
+function sendUserMsg($wsId,$msg,$jsMsg)
 {
-    $toUserId = $msg->toUid;
-    $fromUserId = $GLOBALS['redis']->hget('WsIdUser',$senderWsId);
-    if ($toWsId = getWsIdByUid($toUserId))
+    $toId = $msg['to_id'];
+    $from_id = getUid($wsId);
+    $resMsg = resMsg('msg',$msg['content'],$from_id,$toId,$msg['time']);
+
+    if ($toWsId = getWsId($toId))
     {
-        $GLOBALS['ws']->push($toWsId,$jsMsg);
+        wsPush($toWsId,$resMsg);
     }else{
-        $GLOBALS['redis']->sAdd('Records',$jsMsg);
+        chatRecord();
     }
-}
-/**
- * 根据ws id获取用户id
- * @param $uid
- * @return mixed
- */
-function getWsIdByUid($uid)
-{
-    return $GLOBALS['redis']->hGet('UserWsId',$uid);
 }

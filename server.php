@@ -4,6 +4,8 @@
  */
 require "socket_config.php";
 require "socket_functions.php";
+require "response_type.php";
+require "database_handle.php";
 /**
  * ***************************************
  *           绑定回调事件                *
@@ -61,7 +63,6 @@ $ws->on('workerstart', function ($ws, $wid)use ($redisConf,$mysqlConf) {
 $ws->on('managerstart', function ($ws)use ($redisConf) {
     swoole_set_process_name(PROCESS_NAME.'_manage');
 });
-
 /**
  * swoole websocket服务特有的回调函数，此函数在websocket服务器中必须定义实现，否则websocket服务将无法启动
  * 当服务器收到来自客户端的数据帧时会回调此函数
@@ -80,18 +81,19 @@ $ws->on('message', function ($ws, $frame) {
     if (!empty($msg['type'])){
         switch ($msg['type']){
             case 'ping':            //心跳包
-                $ws->push($frame->fd,json_encode(['type'=>'pong','msg'=>'pong',]));
+                wsPush($frame->fd,resMsg('ping'));
                 break;
             case 'c2c':             //个人信息
             case 'group':
                 $ws->task($frame);
                 break;
             case 'login':
-                userLogin($ws,$frame,$msg);
+                userLogin($frame->fd,$msg['token']);
                 break;
         }
     }else{
-        $ws->close($frame->fd);
+        wsPush($frame->fd,resMsg('system',"unallowed msg type, please use official application"));
+        wsClose($frame->fd);
     }
 });
 
@@ -110,6 +112,8 @@ $ws->on('task', function ($ws, $tid, $wid, $frame) {
         case 'c2c':             //个人信息
             sendUserMsg($frame->fd,$msg,$frame->data);
             break;
+        case 'group':
+
     }
     return $frame;
 });
