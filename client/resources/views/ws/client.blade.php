@@ -1,28 +1,46 @@
-<!DOCTYPE html>
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<form>
-    <input type="text" id="host" value="127.0.0.1">
-    <input type="number" id="port" value="9420">
-    <input type="button" onclick="javascript:wsConnect()" value="SUB">
-</form>
-<form>
-    <input type="text" id="input">
-    <input type="button" onclick="javascript:sendMsg()" value="SUB">
-</form>
-<form>
-    <input type="file" onchange="javascript:sendImg()">
-</form>
-<div id="chatDiv">
+@extends('layouts.app')
 
+@section('content')
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    WEB SOCKET
+                </div>
+                <div class="card-body">
+                    <form class="form">
+                        <div class="form-group">
+                            <input type="text" id="host" value="127.0.0.1" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="port" value="9420" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input type="button" onclick="javascript:ajaxToken()" value="SUB" class="btn btn-github">
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    dafa
+                </div>
+            </div>
+            <form>
+                <input type="text" id="input">
+                <input type="button" onclick="javascript:sendMsg()" value="SUB">
+            </form>
+            <form>
+                <input type="file" onchange="javascript:sendImg()">
+            </form>
+            <div id="chatDiv">
+
+            </div>
+
+            <input type="hidden" value="{{url('/')}}" id="hostUrl">
+        </div>
+    </div>
 </div>
 
-<input type="hidden" value="{{url('/')}}" id="hostUrl">
-
-</body>
 <script
         src="https://code.jquery.com/jquery-2.2.4.min.js"
         integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
@@ -34,6 +52,13 @@
     var wsPort;
 
     window.onload = function () {
+        ajaxToken();
+    }
+</script>
+<script>
+    var ws;
+    var wsPing;
+    function ajaxToken() {
         url = $('#hostUrl').val();
         console.log(url);
         $.get(url+"/ws/token",function (data) {
@@ -44,14 +69,13 @@
             wsConnect();
         },'json');
     }
-</script>
-<script>
-    var ws;
-    var wsPing;
     function wsConnect() {
-//        var host = $('#host').val();
-//        var port = $('#port').val();
-        ws = new WebSocket("ws://"+wsHost+":"+wsPort);
+
+        try {
+            ws = new WebSocket("ws://"+wsHost+":"+wsPort);
+        }catch ($e){
+
+        }
 
         ws.onopen = function (event) {
             console.log('Socket Connect');
@@ -238,4 +262,4 @@
         if(bspeed==0) time.innerHTML = '上传已取消';
     }
 </script>
-</html>
+@endsection

@@ -15,6 +15,7 @@ class AuthController extends Controller
     public function index()
     {
         $token = csrf_token();
+        return view('auth.login');
         echo "<form action='' method='post'>
                 <input type='text' name='email'>
                 <input type='text' name='password'>
@@ -29,31 +30,37 @@ class AuthController extends Controller
         $validator = Validator::make($credentials,$rule);
 
         if ($validator->fails()){
-//            return 'bad';
             return Redirect::back()->withInput()->withErrors($validator);
         }
         if (Auth::attempt($credentials)){
 //            return 'true';
             return redirect()->intended('home');
         }else{
-            return 'false';
+            return Redirect::back()->withInput()->withErrors(['email' => 'These cridential not match our record!']);
         }
     }
     public function logout()
     {
         Auth::logout();
+        return redirect()->intended('login');
     }
     public function register(Request $request)
     {
         $method = $request->method();
         if ($method == 'GET'){
-            return view("register");
+            return view("auth.register");
         }
-        $registerInfo = $request->only(['email','password']);
+        $registerInfo = $request->only(['email','password','name','password_confirmation']);
+        if ($registerInfo['password']!==$registerInfo['password_confirmation']){
+            return Redirect::back()->withInput()->withErrors(['password'=>'两次密码输入不一致']);
+        }
         $registerInfo['password'] = Hash::make($registerInfo['password']);
+        if (User::where('email',$registerInfo['email'])->first())
+            return Redirect::back()->withInput()->withErrors(['email'=>'该邮箱已被注册']);
         $user = User::create($registerInfo);
         if ($user){
-            return redirect('login');
+            Auth::login($user);
+            return redirect('/');
         }
     }
 }
