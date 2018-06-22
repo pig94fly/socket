@@ -10,35 +10,52 @@
                 </div>
                 <div class="card-body">
                     <form class="form">
-                        <div class="form-group">
-                            <input type="text" id="host" value="127.0.0.1" class="form-control">
+                        <div class="row form-group">
+                            <label for="host" class="col-md-4 col-form-label text-md-right">HOST</label>
+                            <div class="col-md-6">
+                                <input type="text" id="host" value="127.0.0.1" class="form-control">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <input type="number" id="port" value="9420" class="form-control">
+                        <div class="row form-group">
+                            <label for="port" class="col-md-4 col-form-label text-md-right">PORT</label>
+                            <div class="col-md-6">
+                                <input type="number" id="port" value="9420" class="form-control">
+                            </div>
                         </div>
-                        <div class="form-group">
+                        <div class="row form-group">
                             <input type="button" onclick="javascript:ajaxToken()" value="SUB" class="btn btn-github">
                         </div>
                     </form>
                 </div>
-                <div class="card-footer">
-                    dafa
-                </div>
             </div>
-            <form>
-                <input type="text" id="input">
-                <input type="button" onclick="javascript:sendMsg()" value="SUB">
-            </form>
-            <form>
-                <input type="file" onchange="javascript:sendImg()">
-            </form>
-            <div id="chatDiv">
-
-            </div>
-
-            <input type="hidden" value="{{url('/')}}" id="hostUrl">
         </div>
     </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    SOCKET CHAT
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row form-group">
+                            <label for="content" class="col-md-4 col-form-label text-md-right">消息</label>
+                            <div class="col-md-6">
+                                <input type="text" id="content" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <input type="button" onclick="javascript:sendMsg()" value="SUB">
+                        </div>
+                    </form>
+                    <form>
+                        <input type="file" onchange="javascript:sendImg()">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script
@@ -70,18 +87,14 @@
         },'json');
     }
     function wsConnect() {
-
         try {
             ws = new WebSocket("ws://"+wsHost+":"+wsPort);
-        }catch ($e){
-
-        }
-
-        ws.onopen = function (event) {
-            console.log('Socket Connect');
-            sendLogin();
-            wsPing = setInterval('pingWs()',3000);
-        }
+            ws.onopen = function (event) {
+                console.log('Socket Connect');
+                sendLogin();
+                wsPing = setInterval('pingWs()',3000);
+            }
+        }catch (e){}
         ws.onmessage = function (evt) {
             var msgJson = JSON.parse(evt.data);
             switch (msgJson.type){
@@ -102,6 +115,7 @@
     }
     function sendMsg() {
         var msg = $("#input").val();
+        var msg = {'type':'c2c','content':msg,'to_id':toId,}
         ws.send(msg);
     }
     function sendImg() {
