@@ -8,11 +8,11 @@
                     WEB SOCKET CHAT ROOM
                 </div>
                 <div class="card-body row">
-                    <div class="col-md-3">
+                    <div class="col-md-4" style="border-right: 1px solid #ced4da">
                         <div id="room-list">
                             <ul class="nav">
-                                <li class="col-md-12 row" style="height: 40px" v-for="(room, key, index) in roomList" v-on:click="set(key)" >
-                                    <span class="col-md-4"><h1>唐</h1></span>
+                                <li style="border-bottom: #ced4da 1px solid;" class="col-md-12 row active" style="height: 40px" v-for="(room, key, index) in roomList" v-on:click="set(key)" >
+                                    <span class="col-md-4" style="margin-bottom: 0"><h1 style="line-height: 60px;overflow: hidden;margin-bottom: 0">唐</h1></span>
                                     <span class="col-md-8">
                                         @{{ index }}-@{{key}}-@{{room.name}}<br>ddd
                                     </span>
@@ -20,8 +20,9 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="col-md-9">
-                        <a class="btn" onclick="set()">aa</a>
+                    <div class="col-md-8">
+                        <div></div>
+                        <div class="row"></div>
                     </div>
                 </div>
             </div>
