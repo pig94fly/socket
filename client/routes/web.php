@@ -27,4 +27,7 @@ Route::group(['middleware'=>['auth']],function ($router){
     $router->get('home','HomeController@index');
     $router->get('ws/token','WebSocketController@token');
     $router->get('ws/client','WebSocketController@client');
+    $router->get('ws/chatroom',function (){
+       return view('ws.chatroom');
+    });
 });

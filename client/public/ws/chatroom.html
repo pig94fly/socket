@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>CHAT ROOM</title>
+    <script src="https://cdn.bootcss.com/vue/2.2.2/vue.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/4.1.0/css/bootstrap-grid.css" rel="stylesheet">
+  </head>
+  <body>
+      <div class="container">
+       <div class="row justify-content-center col-md-12">
+           <div class="card" style="width: 100%">
+               <div class="card-header">
+                   WEB SOCKET CHAT ROOM
+               </div>
+               <div class="card-body row">
+                   <div class="col-md-3">
+                       <div id="room-list">
+                           <ul style="list-style: none">
+                               <li v-for="room in roomList" >
+                                   {{room.name}}
+                               </li>
+                               {{test}}
+                           </ul>
+                           <input v-model="roomList[0].name">
+                       </div>
+                   </div>
+                   <div class="col-md-9">
+                       <a class="btn" onclick="set()">aa</a>
+                   </div>
+               </div>
+           </div>
+       </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    const room = new Vue({
+     el: '#room-list',
+     data: {
+         roomList: [
+             {name: 'zhu'},
+             {name: 'zhu1'},
+             {name: 'zhu2'}
+         ],
+         test: 'ddd'
+     },
+     methods: {
+         set: function () {
+             this.roomList[0].name = 'zhuzhuzhu';
+         }
+     }
+    });
+    function set() {
+       room.roomList.push({name:'zhuzhuzhu'})
+       console.log(room.roomList[0].name)
+       room.test = 'ddddd';
+    }
+  </script>
+</html>

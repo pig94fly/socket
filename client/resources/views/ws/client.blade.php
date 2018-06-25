@@ -23,7 +23,10 @@
                             </div>
                         </div>
                         <div class="row form-group">
-                            <input type="button" onclick="javascript:ajaxToken()" value="SUB" class="btn btn-github">
+                            <div class="col-md-4"></div>
+                            <div class="col-md-8">
+                                <input type="button" onclick="javascript:ajaxToken()" value="SUB" class="btn btn-github pull-right">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -37,7 +40,7 @@
                     SOCKET CHAT
                 </div>
                 <div class="card-body">
-                    <form>
+                    <form class="form">
                         <div class="row form-group">
                             <label for="content" class="col-md-4 col-form-label text-md-right">消息</label>
                             <div class="col-md-6">
@@ -45,11 +48,11 @@
                             </div>
                         </div>
                         <div class="row form-group">
-                            <input type="button" onclick="javascript:sendMsg()" value="SUB">
+                            <div class="col-md-4"></div>
+                            <div class="col-md-8">
+                                <input type="button" class="btn" onclick="javascript:sendMsg()" value="SUB">
+                            </div>
                         </div>
-                    </form>
-                    <form>
-                        <input type="file" onchange="javascript:sendImg()">
                     </form>
                 </div>
             </div>
@@ -57,7 +60,11 @@
     </div>
 
 </div>
-
+<script type="text/javascript">
+    $('input[id=lefile]').change(function() {
+        $('#photoCover').val($(this).val());
+    });
+</script>
 <script
         src="https://code.jquery.com/jquery-2.2.4.min.js"
         integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
