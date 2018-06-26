@@ -69,7 +69,7 @@ function writeProcessPid($redisConf)
  */
 function getUidByLoginToken($token)
 {
-    $uid = $GLOBALS['redis']->get('WsToken-'.$token);
+    return $GLOBALS['redis']->get('WsToken'.$token);
 }
 /**
  * 保存用戶id與ws，ws與id對應信息

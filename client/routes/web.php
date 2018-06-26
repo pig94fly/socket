@@ -30,4 +30,5 @@ Route::group(['middleware'=>['auth']],function ($router){
     $router->get('ws/chatroom',function (){
        return view('ws.chatroom');
     });
+    $router->get('ws/user/list','WebSocketController@userList');
 });

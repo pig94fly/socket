@@ -84,7 +84,7 @@ $ws->on('message', function ($ws, $frame) {
             case 'ping':            //心跳包
                 wsPush($frame->fd,resMsg('ping'));
                 break;
-            case 'c2c':             //个人信息
+            case 'msg':             //个人信息
             case 'group':
                 $ws->task($frame);
                 break;
@@ -110,9 +110,10 @@ $ws->on('message', function ($ws, $frame) {
 $ws->on('task', function ($ws, $tid, $wid, $frame) {
     $wsId = $frame->fd;
     $data = $frame->data;
+//    print_r($data);return;
     $msg = json_decode($data,true);
     switch ($msg['type']){
-        case 'c2c':             //个人信息
+        case 'msg':             //个人信息
             sendUserMsg($wsId,$data);
             break;
         case 'group':

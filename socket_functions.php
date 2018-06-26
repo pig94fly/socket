@@ -19,7 +19,6 @@ function userLogin($wsId,$token)
         wsPush($wsId,resMsg('system','web socket connect successful!'));
     }else{
         wsPush($wsId,resMsg('system','invalid user or token!'));
-        wsPush($wsId);
     }
 }
 /**
