@@ -33,9 +33,23 @@ function getWsId($uid)
 {
     return $GLOBALS['redis']->hGet('UserWsId',$uid);
 }
+/**
+ * @param $wsId
+ * @return mixed
+ */
 function getUid($wsId)
 {
     return $GLOBALS['redis']->hGet('WsIdUser',$wsId);
+}
+/**
+ * 獲取羣聊裏登錄用戶ws
+ * @param $groupId 羣聊id
+ * @return mixed
+ */
+function getGroupWsId($groupId)
+{
+    $uidArr = $GLOBALS['redis']->sMembers("GROUP-{$groupId}");
+    return $GLOBALS['redis']->hmGet('UserWsId',$uidArr);
 }
 /**
  * redis存储socket主进程id
@@ -50,16 +64,48 @@ function writeProcessPid($redisConf)
     $redis->sAdd('SOCKET_PROCESS',getmypid());
     $redis->close();
 }
+/**
+ * @param $token 根據token查找uid
+ */
 function getUidByLoginToken($token)
 {
     $uid = $GLOBALS['redis']->get('WsToken-'.$token);
 }
+/**
+ * 保存用戶id與ws，ws與id對應信息
+ * @param $wsId wsid
+ * @param $uid 用戶id
+ */
 function storeWsMsg($wsId,$uid)
 {
     $GLOBALS['redis']->hset('UserWsId',$uid,$wsId);
     $GLOBALS['redis']->hset('WsIdUser',$wsId,$uid);
 }
-function chatRecord()
+/**
+ * 保存數據到redis，再由一個進程保存到MySQL
+ * @param $msg 需要保存的信息json格式
+ */
+function chatRecord($msg)
 {
-    $GLOBALS['redis']->sAdd('Records',$jsMsg);
+    $GLOBALS['redis']->sAdd('Records',$msg);
+}
+
+/**
+ * 讀取羣組信息到redis
+ * @param $redisConf
+ * @param $mysqlConf
+ */
+function storeGroupChatRelate($redisConf,$mysqlConf)
+{
+    redisStart($redisConf);
+    mysqlStart($mysqlConf);
+    $sql = "select * from group_relate";
+    $res = $GLOBALS['mysqli']->query($sql);
+    while ($row = $res->fetch_assoc()){
+        $groupId = $row['group_id'];
+        $uid = $row['user_id'];
+        $GLOBALS['redis']->sAdd("GROUP-{$groupId}",$uid);
+    }
+    unset($GLOBALS['redis']);
+    unset($GLOBALS['mysqli']);
 }

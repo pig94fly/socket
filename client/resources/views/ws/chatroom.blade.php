@@ -13,6 +13,8 @@
             background:#F8C301;
             border-radius:5px; /* 圆角 */
             margin:30px auto 0;
+            padding-left: 5px;
+            padding-right: 5px;
         }
         .receive {
             position:relative;
@@ -21,6 +23,8 @@
             background:#F8C301;
             border-radius:5px; /* 圆角 */
             margin:30px auto 0;
+            padding-left: 5px;
+            padding-right: 5px;
         }
 
         .receive-arrow {
@@ -48,56 +52,60 @@
 
 
     <div class="container">
-            <div class="row justify-content-center col-md-12">
-            <div class="card" style="width: 100%">
-                <div class="card-header">
-                    WEB SOCKET CHAT ROOM
-                </div>
-                <div class="card-body row">
-                    <div class="col-md-4" style="border-right: 1px solid #ced4da">
-                        <div id="room-list">
-                            <ul class="nav">
-                                <li style="border-bottom: #ced4da 1px solid;" class="col-md-12 row active" style="height: 40px" v-for="(room, key, index) in roomList" v-on:click="set(key)" >
-                                    <span class="col-md-4" style="margin-bottom: 0"><h1 style="line-height: 60px;overflow: hidden;margin-bottom: 0">唐</h1></span>
-                                    <span class="col-md-8">
+        <div class="row justify-content-center ">
+            <div class="col-md-10">
+                <div class="card" style="width: 100%">
+                    <div class="card-header">
+                        WEB SOCKET CHAT ROOM
+                    </div>
+                    <div class="card-body row">
+                        <div class="col-md-4" style="border-right: 1px solid #ced4da;overflow-y: scroll">
+                            <div id="room-list">
+                                <ul class="nav">
+                                    <li style="border-bottom: #ced4da 1px solid;" class="col-md-12 row active" style="height: 40px" v-for="(room, key, index) in roomList" v-on:click="set(key)" >
+                                        <span class="col-md-4" style="margin-bottom: 0"><h1 style="line-height: 60px;overflow: hidden;margin-bottom: 0">唐</h1></span>
+                                        <span class="col-md-8">
                                         @{{ index }}-@{{key}}-@{{room.name}}<br>ddd
                                     </span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="row">
-                            <div class="col-md-12" id="record">
-                                <ul>
-                                    <li class="col-md-12" v-for="record in recordArr" style="float: right;list-style: none;line-height: 30px;">
-                                            <div class="send" v-if="record.from == 'me'">
-                                                @{{record.msg}}
-
-                                                <div class="arrow">
-                                                </div>
-                                            </div>
-                                            <div class="receive" v-if="record.from != 'me'">
-                                                @{{record.msg}}
-
-                                                <div class="receive-arrow">
-                                                </div>
-                                            </div>
-
                                     </li>
                                 </ul>
                             </div>
                         </div>
-                        <div id="chatInput">
+                        <div class="col-md-8">
                             <div class="row">
-                                <div class="col-md-12 pull-right ">
-                                    <textarea class="form-control" rows="4" style="resize: none"></textarea>
+                                <div class="col-md-12" id="record" style="overflow-y: scroll">
+                                    <ul>
+                                        <li class="col-md-12" v-for="record in recordArr" style="list-style: none;line-height: 30px;" v-bind:style="{float:msgFloat(record)}">
+                                            <div v-bind:style="{float:msgFloat(record)}">
+                                                <div v-if="record.from_id == 'me'">
+                                                    <div class="send">
+                                                        @{{record.msg}}
+                                                        <span class="arrow"></span>
+                                                    </div>
+                                                </div>
+                                                <div v-if="record.from_id != 'me'">
+                                                    <div class="receive">
+                                                        @{{record.msg}}
+                                                        <div class="receive-arrow"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12" style="text-align: right">
-                                    <div class="col-md-11"></div>
-                                    <button class="btn btn-sm btn-warning" style="margin-top:10px">发送</button>
+                            <div id="chatInput">
+                                <br>
+                                <div class="row">
+                                    <div class="col-md-12 pull-right ">
+                                        <textarea class="form-control" rows="4" style="resize: none"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" style="text-align: right">
+                                        <div class="col-md-11"></div>
+                                        <button class="btn btn-sm btn-warning" style="margin-top:10px">发送</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -113,7 +121,7 @@
             integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
             crossorigin="anonymous"></script>
     <script>
-        const room = new Vue({
+        var room = new Vue({
             el: '#room-list',
             data: {
                 roomList: [
@@ -121,11 +129,19 @@
                     {name: 'zhu1'},
                     {name: 'zhu2'}
                 ],
-                test: 'ddd'
+                test: 'ddd',
+                currentKey: null
             },
             methods: {
                 set: function (key) {
-                    this.roomList[0].name = key;
+                    if (key==0)return ;
+                    roomList = this.roomList.concat();
+                    room = this.roomList[key];
+                    roomList.splice(key,1);
+                    roomList.unshift(room);
+                    this.roomList = roomList;
+                    console.log(roomList);
+                    this.currentKey = key;
                 }
             }
         });
@@ -133,19 +149,24 @@
             el: "#record",
             data: {
                 recordArr: [
-                    {msg: "msgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsg",from:'me'},
-                    {msg: 'msgmsg',from:'else'}
+                    {msg: "msgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsg",from_id:'me'},
+                    {msg: 'msgmsg',from_id:'else'},
+                    {msg: "msgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsg",from_id:'me'},
+                    {msg: 'msgmsg',from_id:'else'},
+                    {msg: "msgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsg",from_id:'me'},
+                    {msg: 'msgmsg',from_id:'else'},
+                    {msg: "msgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsgmsg",from_id:'me'},
+                    {msg: 'msgmsg',from_id:'else'}
                 ]
+            },
+            methods: {
+                msgFloat: function (record) {
+                    if (record.from_id == 'me')
+                        return 'right';
+                    return 'left';
+                }
             }
         })
-        function set() {
-            var list = room.roomList
-            list.splice(2,1);
-            list.unshift(list[1])
-            room.roomList = list
-            console.log(room.roomList)
-            room.test = 'ddddd';
-        }
         function selectRoom(key) {
             console.log(key);
         }

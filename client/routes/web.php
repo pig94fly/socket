@@ -24,7 +24,7 @@ $router->get('logout','AuthController@logout')->name('logout');
 
 //Route::get('/home', 'HomeController@index')->name('home');
 Route::group(['middleware'=>['auth']],function ($router){
-    $router->get('home','HomeController@index');
+    $router->get('home','HomeController@index')->name('home');
     $router->get('ws/token','WebSocketController@token');
     $router->get('ws/client','WebSocketController@client');
     $router->get('ws/chatroom',function (){

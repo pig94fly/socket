@@ -21,6 +21,8 @@ function resMsg($type,$msg=null,$from_id=null,$to_id=null,$time=null)
             return json_encode(['type'=>'pong','msg'=>'pong',]);
         case 'msg':
             return json_encode(['type'=>'msg','from_id'=>$from_id,'to_id'=>$to_id,'content'=>$msg,'time'=>$time]);
+        case 'group':
+            return json_encode(['type'=>'group','from_id'=>$from_id,'to_id'=>$to_id,'content'=>$msg,'time'=>$time]);
         case 'img':
             return json_encode(['type'=>'img','from_id'=>$from_id,'to_id'=>$to_id,'url'=>$msg,'time'=>$time]);
         case 'system':

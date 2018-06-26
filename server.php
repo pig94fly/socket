@@ -25,8 +25,9 @@ $ws->set($conf['setting']);
  * 已监听了定时器
  * 在onStart中创建的全局资源对象不能在worker进程中被使用，因为发生onStart调用时，worker进程已经创建好了。新创建的对象在主进程内，worker进程无法访问到此内存区域。因此全局对象创建的代码需要放置在swoole_server_start之前
  */
-$ws->on('start', function ($ws) {
+$ws->on('start', function ($ws) use ($redisConf,$mysqlConf) {
     swoole_set_process_name(PROCESS_NAME.'_master');
+    storeGroupChatRelate($redisConf,$mysqlConf);
 });
 
 /**
@@ -107,13 +108,16 @@ $ws->on('message', function ($ws, $frame) {
  * 注意点: onTask函数执行时遇到致命错误退出，或者被外部进程强制kill，当前的任务会被丢弃，但不会影响其他正在排队的Task
  */
 $ws->on('task', function ($ws, $tid, $wid, $frame) {
-    $msg = json_decode($frame->data,true);
+    $wsId = $frame->fd;
+    $data = $frame->data;
+    $msg = json_decode($data,true);
     switch ($msg['type']){
         case 'c2c':             //个人信息
-            sendUserMsg($frame->fd,$msg,$frame->data);
+            sendUserMsg($wsId,$data);
             break;
         case 'group':
-
+            sendGroupMsg($wsId,$data);
+            break;
     }
     return $frame;
 });
